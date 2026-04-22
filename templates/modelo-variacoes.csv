@@ -1,0 +1,5 @@
+Tipo,Nome,Descrição,Preço,Preço Promocional,SKU,SKU Pai,Estoque,Categoria,Imagem Principal,Imagens Galeria,Peso (kg),Comprimento (cm),Largura (cm),Altura (cm),Atributos globais,Atributos variação
+variavel,Camiseta Algodão,Camiseta básica unissex. Preço e stock por variação.,,,CAMIS-001,,,Vestuário,https://example.com/camiseta.jpg,,,,,Tamanho|Cor,
+variacao,,29.90,24.90,CAMIS-001-P-AZ,CAMIS-001,10,,,,,0.2,30,22,3,,Tamanho:P|Cor:Azul
+variacao,,29.90,,CAMIS-001-M-AZ,CAMIS-001,8,,,,,,,,,,Tamanho:M|Cor:Azul
+variacao,,31.90,,CAMIS-001-M-VD,CAMIS-001,3,,,,,,,,,,Tamanho:M|Cor:Verde

@@ -1,0 +1,2 @@
+sku,name,description,short_description,price,sale_price,stock,category,image,status
+DEMO-001,Produto exemplo,Descrição longa do produto.,Resumo curto,99.90,79.90,10,Categoria A,https://example.com/image.jpg,publish

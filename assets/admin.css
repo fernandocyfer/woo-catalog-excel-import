@@ -1,0 +1,363 @@
+/**
+ * Admin — WooCommerce Spreadsheet Product Importer
+ * Layout inspirado em duas colunas (conteúdo + sidebar), com estilo atualizado.
+ */
+
+.wcspi-wrap {
+	--wcspi-accent: #7c3aed;
+	--wcspi-accent-hover: #6d28d9;
+	--wcspi-surface: #ffffff;
+	--wcspi-border: #e2e8f0;
+	--wcspi-text: #0f172a;
+	--wcspi-text-muted: #64748b;
+	--wcspi-highlight-bg: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
+	--wcspi-info-bg: #f8fafc;
+	--wcspi-info-border: #2271b1;
+	--wcspi-radius: 12px;
+	--wcspi-radius-sm: 8px;
+	--wcspi-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+	max-width: 1280px;
+	margin-bottom: 2rem;
+}
+
+.wcspi-page-header {
+	margin-bottom: 1.5rem;
+}
+
+.wcspi-page-title {
+	font-size: 1.65rem;
+	font-weight: 650;
+	letter-spacing: -0.02em;
+	color: var(--wcspi-text);
+	margin: 0 0 0.35rem;
+}
+
+.wcspi-page-subtitle {
+	margin: 0;
+	max-width: 52rem;
+	font-size: 14px;
+	line-height: 1.55;
+	color: var(--wcspi-text-muted);
+}
+
+/* Duas colunas — mesmo padrão conceitual do PrimeLogin (flex + sidebar) */
+.wcspi-admin-container {
+	display: flex;
+	align-items: flex-start;
+	gap: 1.5rem;
+	margin-top: 0.5rem;
+}
+
+.wcspi-admin-content {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+.wcspi-admin-sidebar {
+	flex: 0 0 300px;
+	max-width: 100%;
+}
+
+.wcspi-panel-card {
+	background: var(--wcspi-surface);
+	border: 1px solid var(--wcspi-border);
+	border-radius: var(--wcspi-radius);
+	box-shadow: var(--wcspi-shadow);
+	overflow: hidden;
+}
+
+.wcspi-panel-card .wcspi-tabs {
+	margin: 0;
+	padding: 0 0.75rem;
+	border-bottom: 1px solid var(--wcspi-border);
+	background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.wcspi-panel-card .wcspi-tabs .nav-tab {
+	border: none;
+	background: transparent;
+	margin: 0 0.15rem -1px 0;
+	padding: 0.85rem 1rem;
+	font-weight: 500;
+	color: var(--wcspi-text-muted);
+	border-radius: var(--wcspi-radius-sm) var(--wcspi-radius-sm) 0 0;
+	transition: color 0.15s ease, background 0.15s ease;
+}
+
+.wcspi-panel-card .wcspi-tabs .nav-tab:hover {
+	color: var(--wcspi-text);
+	background: rgba(124, 58, 237, 0.06);
+}
+
+.wcspi-panel-card .wcspi-tabs .nav-tab-active {
+	color: var(--wcspi-accent);
+	background: var(--wcspi-surface);
+	box-shadow: 0 -2px 0 var(--wcspi-accent) inset;
+	font-weight: 600;
+}
+
+.wcspi-panel-body {
+	padding: 1.35rem 1.5rem 1.5rem;
+}
+
+.wcspi-lead {
+	font-size: 14px;
+	line-height: 1.6;
+	margin: 0 0 1rem;
+	color: var(--wcspi-text);
+}
+
+.wcspi-help-section {
+	margin: 0 0 1.5rem;
+	padding: 1rem 1.15rem;
+	background: var(--wcspi-info-bg);
+	border: 1px solid var(--wcspi-border);
+	border-radius: var(--wcspi-radius-sm);
+	border-left: 3px solid var(--wcspi-accent);
+}
+
+.wcspi-help-section h2 {
+	margin: 0 0 0.65rem;
+	font-size: 1rem;
+	font-weight: 650;
+	color: var(--wcspi-text);
+}
+
+.wcspi-help-section > p {
+	margin: 0 0 0.75rem;
+	font-size: 13px;
+	line-height: 1.55;
+	color: var(--wcspi-text);
+}
+
+.wcspi-help-section .wcspi-hints {
+	margin-bottom: 0;
+}
+
+.wcspi-hints {
+	list-style: disc;
+	margin: 0 0 1.25em 1.15em;
+	color: var(--wcspi-text-muted);
+	font-size: 13px;
+}
+
+.wcspi-hints--compact {
+	display: grid;
+	gap: 0.35rem;
+	margin-bottom: 1rem;
+}
+
+.wcspi-hints li {
+	margin-bottom: 0.25em;
+}
+
+.wcspi-inline-actions {
+	margin: 0 0 1.25rem;
+}
+
+.wcspi-notice-success details.wcspi-errors,
+.wcspi-alert details.wcspi-errors {
+	margin-top: 0.75em;
+}
+
+.wcspi-notice-success details.wcspi-errors ul,
+.wcspi-alert details.wcspi-errors ul {
+	margin: 0.5em 0 0 1.25em;
+	list-style: disc;
+}
+
+.wcspi-alert {
+	border-radius: var(--wcspi-radius-sm);
+	border-width: 1px;
+}
+
+.wcspi-last-log {
+	margin-top: 1.5rem;
+	padding: 1rem 1.15rem;
+	background: #f1f5f9;
+	border: 1px solid var(--wcspi-border);
+	border-radius: var(--wcspi-radius-sm);
+}
+
+.wcspi-last-log h2 {
+	margin: 0 0 0.5rem;
+	font-size: 1rem;
+}
+
+.wcspi-form {
+	margin-top: 1.25rem;
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--wcspi-border);
+}
+
+.wcspi-form-table th {
+	padding-top: 1.1rem;
+}
+
+.wcspi-file-input {
+	padding: 0.35rem 0;
+}
+
+.wcspi-submit-button.button-primary {
+	background: var(--wcspi-accent);
+	border-color: var(--wcspi-accent);
+	text-shadow: none;
+	box-shadow: 0 1px 2px rgba(124, 58, 237, 0.25);
+	border-radius: var(--wcspi-radius-sm);
+	padding: 0.35rem 1.25rem;
+	font-weight: 600;
+}
+
+.wcspi-submit-button.button-primary:hover,
+.wcspi-submit-button.button-primary:focus {
+	background: var(--wcspi-accent-hover);
+	border-color: var(--wcspi-accent-hover);
+}
+
+.wcspi-btn-primary.button-primary {
+	background: var(--wcspi-accent);
+	border-color: var(--wcspi-accent);
+	text-shadow: none;
+	border-radius: var(--wcspi-radius-sm);
+}
+
+.wcspi-btn-primary.button-primary:hover,
+.wcspi-btn-primary.button-primary:focus {
+	background: var(--wcspi-accent-hover);
+	border-color: var(--wcspi-accent-hover);
+}
+
+.wcspi-download-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 1rem;
+	margin: 1.15rem 0;
+}
+
+.wcspi-card {
+	background: #f8fafc;
+	border: 1px solid var(--wcspi-border);
+	border-radius: var(--wcspi-radius-sm);
+	padding: 1.15rem 1.25rem;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wcspi-card:hover {
+	border-color: rgba(124, 58, 237, 0.35);
+	box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08);
+}
+
+.wcspi-card h3 {
+	margin: 0 0 0.65rem;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--wcspi-text);
+}
+
+.wcspi-card p {
+	margin: 0 0 0.75rem;
+	font-size: 13px;
+	line-height: 1.55;
+	color: var(--wcspi-text-muted);
+}
+
+.wcspi-muted {
+	color: var(--wcspi-text-muted);
+	font-size: 13px;
+	margin-top: 1.25rem;
+}
+
+/* Sidebar — dois boxes no estilo PrimeLogin (destaque + info) */
+.wcspi-side-box {
+	border-radius: var(--wcspi-radius-sm);
+	padding: 1.15rem 1.2rem;
+	margin-bottom: 1.1rem;
+	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.wcspi-side-box--highlight {
+	background: var(--wcspi-highlight-bg);
+	border: 1px solid rgba(234, 179, 8, 0.45);
+}
+
+.wcspi-side-box--info {
+	background: var(--wcspi-info-bg);
+	border: 1px solid var(--wcspi-border);
+	border-left: 4px solid var(--wcspi-info-border);
+}
+
+.wcspi-side-box__title {
+	margin: 0 0 0.6rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--wcspi-text);
+}
+
+.wcspi-side-box--highlight .wcspi-side-box__title {
+	border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.wcspi-side-box__text {
+	margin: 0 0 0.75rem;
+	font-size: 13px;
+	line-height: 1.55;
+	color: #334155;
+}
+
+.wcspi-side-list {
+	margin: 0 0 1rem 1rem;
+	padding: 0;
+	font-size: 12px;
+	line-height: 1.45;
+	color: #1e293b;
+}
+
+.wcspi-side-list li {
+	margin-bottom: 0.35em;
+}
+
+.wcspi-side-cta {
+	display: block;
+	text-align: center;
+	font-weight: 700;
+	text-decoration: none;
+	padding: 0.65rem 0.85rem;
+	border-radius: 6px;
+	transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.wcspi-side-cta:hover,
+.wcspi-side-cta:focus {
+	opacity: 0.92;
+	transform: translateY(-1px);
+}
+
+.wcspi-side-cta--dark {
+	background: #0f172a;
+	color: #fff !important;
+	border: none;
+}
+
+.wcspi-side-link {
+	display: inline-block;
+	margin-top: 0.25rem;
+}
+
+.wcspi-side-foot {
+	margin: 0.85rem 0 0;
+	font-size: 11px;
+	color: var(--wcspi-text-muted);
+}
+
+@media screen and (max-width: 960px) {
+	.wcspi-admin-container {
+		flex-direction: column;
+	}
+
+	.wcspi-admin-sidebar {
+		flex: 1 1 auto;
+		width: 100%;
+	}
+}
