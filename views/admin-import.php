@@ -96,19 +96,20 @@ $export_url  = admin_url( 'admin.php?page=wcspi-import&tab=export' );
 							</p>
 
 							<p class="wcspi-muted">
-								<?php esc_html_e( 'Para obter uma planilha com os produtos já publicados na loja (mesmo formato de colunas que o modelo com variações), use a aba Exportar.', 'wc-spreadsheet-product-importer' ); ?>
+								<?php esc_html_e( 'Para obter uma planilha com todos os produtos da loja excepto os que estão no lixo (mesmo formato de colunas que o modelo com variações), use a aba Exportar.', 'wc-spreadsheet-product-importer' ); ?>
 							</p>
 						</div>
 					<?php elseif ( 'export' === $active_tab ) : ?>
 						<div class="wcspi-tab-panel wcspi-tab-export">
 							<p class="wcspi-lead">
-								<?php esc_html_e( 'Gere um ficheiro CSV (UTF-8) com o catálogo actual: produtos simples, variáveis e variações, com os mesmos cabeçalhos que «modelo-variacoes.csv», pronto para editar e voltar a importar.', 'wc-spreadsheet-product-importer' ); ?>
+								<?php esc_html_e( 'Gere um ficheiro CSV (UTF-8) com o catálogo actual: todos os tipos de produto WooCommerce e variações, com os mesmos cabeçalhos que «modelo-variacoes.csv», pronto para editar e voltar a importar.', 'wc-spreadsheet-product-importer' ); ?>
 							</p>
 							<ul class="wcspi-hints wcspi-hints--compact">
 								<li><?php esc_html_e( 'Ordem das linhas: primeiro todos os produtos simples e pais variáveis; a seguir todas as variações (agrupadas por pai).', 'wc-spreadsheet-product-importer' ); ?></li>
-								<li><?php esc_html_e( 'Inclui estados publicado, rascunho e privado; não inclui produtos no lixo.', 'wc-spreadsheet-product-importer' ); ?></li>
+								<li><?php esc_html_e( 'Inclui todos os estados de publicação excepto o lixo (por exemplo publicado, rascunho, pendente, privado).', 'wc-spreadsheet-product-importer' ); ?></li>
+								<li><?php esc_html_e( 'Inclui artigos sem stock e em espera (encomenda), mesmo que a loja oculte fora de stock no catálogo.', 'wc-spreadsheet-product-importer' ); ?></li>
 								<li><?php esc_html_e( 'Imagens: URLs directos dos ficheiros na biblioteca de media (como na importação).', 'wc-spreadsheet-product-importer' ); ?></li>
-								<li><?php esc_html_e( 'Apenas tipos simples e variável; outros tipos WooCommerce (agrupado, externo, etc.) não entram neste CSV.', 'wc-spreadsheet-product-importer' ); ?></li>
+								<li><?php esc_html_e( 'Produtos agrupados ou externos aparecem como linhas sem tipo (como os simples); campos que não existam para esse tipo ficam vazios.', 'wc-spreadsheet-product-importer' ); ?></li>
 								<li><?php esc_html_e( 'Catálogos muito grandes podem demorar — o limite de tempo de PHP é alargado durante a exportação.', 'wc-spreadsheet-product-importer' ); ?></li>
 							</ul>
 							<form class="wcspi-form wcspi-form--export" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
