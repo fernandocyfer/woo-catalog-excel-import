@@ -33,23 +33,38 @@ Cabeçalhos de coluna aceites em **português** ou **inglês** (mapeamento centr
 - **WordPress** 6.2 ou superior  
 - **WooCommerce** 8.0 ou superior (plugin marcado como dependência)  
 - **PHP** 8.0 ou superior  
-- **Composer** — necessário para instalar o PhpSpreadsheet (leitura de `.xlsx`)
+
+O pacote de distribuição (ZIP) **já inclui** a pasta `vendor/` com o PhpSpreadsheet — **não** é necessário Composer na loja.
 
 ---
 
 ## Instalação
 
-### A partir do código (ex.: GitHub)
+### Uso normal (ZIP ou cópia completa da pasta)
 
-1. Clone ou copie o repositório para `wp-content/plugins/woo-catalog-excel-import-cyfer`.
-2. Na raiz do plugin, instale as dependências de produção:
+1. Envie o ZIP em **Plugins → Adicionar novo → Enviar plugin**, ou copie a pasta do plugin (com `vendor/` dentro) para `wp-content/plugins/`.
+2. Ative o plugin em **Plugins**.
+3. Confirme que o **WooCommerce** está ativo.
+
+### A partir do código-fonte sem `vendor/` (desenvolvimento)
+
+Se o repositório não trouxer `vendor/`, na raiz do plugin execute:
 
 ```bash
 composer install --no-dev --optimize-autoloader
 ```
 
-3. No WordPress, ative o plugin em **Plugins**.
-4. Confirme que o **WooCommerce** está ativo.
+Depois ative o plugin no WordPress.
+
+### Pacotes de release (mantenedores)
+
+Antes de gerar o ZIP para clientes ou WordPress.org, garanta dependências de produção:
+
+```bash
+composer install --no-dev --optimize-autoloader
+```
+
+Inclua a pasta `vendor/` no arquivo compactado.
 
 ### Onde usar no admin
 

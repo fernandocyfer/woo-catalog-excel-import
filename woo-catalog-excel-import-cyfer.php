@@ -38,7 +38,7 @@ if ( ! is_readable( WCSPI_DIR . 'vendor/autoload.php' ) ) {
 			}
 			echo '<div class="notice notice-error"><p>';
 			echo esc_html__(
-				'WooCommerce Spreadsheet Product Importer: execute «composer install» na pasta do plugin para instalar dependências (PhpSpreadsheet).',
+				'WooCommerce Spreadsheet Product Importer: the library folder is missing (vendor/). Reinstall the plugin from the distribution ZIP, which includes PhpSpreadsheet. If you are developing from a Git clone, run: composer install --no-dev --optimize-autoloader',
 				'wc-spreadsheet-product-importer'
 			);
 			echo '</p></div>';

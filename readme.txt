@@ -25,11 +25,12 @@ Compatível com **HPOS** (tabelas de encomendas personalizadas do WooCommerce).
 
 == Installation ==
 
-1. Envie a pasta do plugin para `wp-content/plugins/` ou instale o ZIP no WordPress.
-2. Na pasta do plugin, execute `composer install --no-dev --optimize-autoloader` (necessário para ler .xlsx).
-3. Ative o plugin em **Plugins**.
-4. Confirme que o **WooCommerce** está ativo.
-5. Vá a **WooCommerce → Spreadsheet import** para importar ou à aba **Ajuda** para descarregar modelos.
+1. Envie a pasta do plugin (com a pasta `vendor/` incluída) para `wp-content/plugins/` ou instale o ZIP no WordPress. O pacote de distribuição já contém as bibliotecas necessárias para ler `.xlsx`.
+2. Ative o plugin em **Plugins**.
+3. Confirme que o **WooCommerce** está ativo.
+4. Vá a **WooCommerce → Spreadsheet import** para importar ou à aba **Ajuda** para descarregar modelos.
+
+Desenvolvimento a partir do Git sem `vendor/`: na raiz do plugin execute `composer install --no-dev --optimize-autoloader` antes de ativar.
 
 == Frequently Asked Questions ==
 
@@ -39,7 +40,7 @@ No modelo simples: **Nome** e **SKU**. No modelo com variações, siga as coluna
 
 = Aceita ficheiros Excel? =
 
-Sim, **.xlsx** e **.csv**, através da biblioteca PhpSpreadsheet (instalada via Composer).
+Sim, **.xlsx** e **.csv**, através da biblioteca PhpSpreadsheet (incluída na pasta `vendor/` do plugin).
 
 = O que acontece se uma imagem falhar? =
 

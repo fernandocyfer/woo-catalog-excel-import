@@ -103,7 +103,8 @@ final class Product_Export_Service {
 		$export_error = null;
 		try {
 			foreach ( $this->yield_rows() as $row ) {
-				fputcsv( $out, $row, ',' );
+				fputcsv( $out, $row, ',', '"' );
+				fflush( $out );
 			}
 		} catch ( \Throwable $e ) {
 			$export_error = $e;
@@ -158,6 +159,9 @@ final class Product_Export_Service {
 		$wp_args                  = apply_filters( 'wcspi_export_parent_wp_query_args', $wp_args );
 		// Garante que temas/plugins não injectam tax_query de visibilidade/fora de stock.
 		$wp_args['suppress_filters'] = true;
+		// Filtros não podem limitar a exportação (ex.: posts_per_page = 1 ou 0 → default do blog).
+		$wp_args['posts_per_page'] = -1;
+		$wp_args['nopaging']        = true;
 
 		++self::$export_wp_query_depth;
 		try {
@@ -190,6 +194,8 @@ final class Product_Export_Service {
 		$wp_args['no_found_rows'] = true;
 		$wp_args                  = apply_filters( 'wcspi_export_variation_wp_query_args', $wp_args );
 		$wp_args['suppress_filters'] = true;
+		$wp_args['posts_per_page']   = -1;
+		$wp_args['nopaging']          = true;
 
 		$ids = array();
 		++self::$export_wp_query_depth;
@@ -393,23 +399,94 @@ final class Product_Export_Service {
 				}
 			} catch ( \Throwable $e ) {
 				$this->log_export_skip( 'parent', $product_id, $e );
-				yield $this->row_fallback_parent( $product_id );
+				try {
+					yield $this->row_fallback_parent( $product_id );
+				} catch ( \Throwable $e2 ) {
+					$this->log_export_skip( 'parent', $product_id, $e2 );
+					yield $this->row_emergency_blank();
+				}
 			}
 		}
 
 		foreach ( $this->query_variation_product_ids() as $variation_id ) {
 			$variation = wc_get_product( $variation_id );
 			if ( ! $variation instanceof WC_Product_Variation ) {
-				yield $this->row_fallback_variation( $variation_id );
+				try {
+					yield $this->row_fallback_variation( $variation_id );
+				} catch ( \Throwable $e ) {
+					$this->log_export_skip( 'variation', $variation_id, $e );
+					yield $this->row_emergency_blank_variation();
+				}
 				continue;
 			}
 			try {
 				yield $this->row_variation( $variation );
 			} catch ( \Throwable $e ) {
 				$this->log_export_skip( 'variation', $variation_id, $e );
-				yield $this->row_fallback_variation( $variation_id );
+				try {
+					yield $this->row_fallback_variation( $variation_id );
+				} catch ( \Throwable $e2 ) {
+					$this->log_export_skip( 'variation', $variation_id, $e2 );
+					yield $this->row_emergency_blank_variation();
+				}
 			}
 		}
+	}
+
+	/**
+	 * Linha só com tipo «variacao» quando nem o fallback pode ser gerado com segurança.
+	 *
+	 * @return list<string>
+	 */
+	private function row_emergency_blank_variation(): array {
+		return $this->format_row(
+			array(
+				'tipo'                 => 'variacao',
+				'name'                 => '',
+				'description'          => '',
+				'regular'              => '',
+				'sale'                 => '',
+				'sku'                  => '',
+				'parent_sku'           => '',
+				'stock'                => '',
+				'category'             => '',
+				'image'                => '',
+				'gallery'              => '',
+				'weight'               => '',
+				'length'               => '',
+				'width'                => '',
+				'height'               => '',
+				'attributes_global'    => '',
+				'attributes_variation' => '',
+			)
+		);
+	}
+
+	/**
+	 * @return list<string>
+	 */
+	private function row_emergency_blank(): array {
+		return $this->format_row(
+			array(
+				'tipo'                 => '',
+				'name'                 => '',
+				'description'          => '',
+				'regular'              => '',
+				'sale'                 => '',
+				'sku'                  => '',
+				'parent_sku'           => '',
+				'stock'                => '',
+				'category'             => '',
+				'image'                => '',
+				'gallery'              => '',
+				'weight'               => '',
+				'length'               => '',
+				'width'                => '',
+				'height'               => '',
+				'attributes_global'    => '',
+				'attributes_variation' => '',
+			)
+		);
 	}
 
 	/**
@@ -431,7 +508,7 @@ final class Product_Export_Service {
 				'description'          => $desc,
 				'regular'              => '',
 				'sale'                 => '',
-				'sku'                  => '',
+				'sku'                  => $this->export_sku_from_post_id( $post_id ),
 				'parent_sku'           => '',
 				'stock'                => '',
 				'category'             => $post_id > 0 ? $this->terms_csv( $post_id, 'product_cat' ) : '',
@@ -458,14 +535,14 @@ final class Product_Export_Service {
 		if ( $parent_id > 0 ) {
 			$parent_prod = wc_get_product( $parent_id );
 			if ( $parent_prod instanceof WC_Product_Variable ) {
-				$parent_sku = $this->cell_str( $parent_prod->get_sku() );
+				$parent_sku = $this->export_product_sku( $parent_prod );
 				try {
 					$attr_global = $this->variable_attribute_labels( $parent_prod );
 				} catch ( \Throwable $e ) {
 					$attr_global = '';
 				}
 			} elseif ( $parent_prod instanceof WC_Product ) {
-				$parent_sku = $this->cell_str( $parent_prod->get_sku() );
+				$parent_sku = $this->export_product_sku( $parent_prod );
 			}
 		}
 		$desc = ( $post && is_string( $post->post_content ) && '' !== $post->post_content )
@@ -479,7 +556,7 @@ final class Product_Export_Service {
 				'description'          => $desc,
 				'regular'              => '',
 				'sale'                 => '',
-				'sku'                  => '',
+				'sku'                  => $this->export_sku_from_post_id( $post_id ),
 				'parent_sku'           => $parent_sku,
 				'stock'                => '',
 				'category'             => '',
@@ -517,20 +594,20 @@ final class Product_Export_Service {
 		return $this->format_row(
 			array(
 				'tipo'                 => '',
-				'name'                 => $this->cell_str( $product->get_name() ),
-				'description'          => $this->description_plain( $product->get_description() ),
-				'regular'              => $this->price_out( $product->get_regular_price() ),
-				'sale'                 => $this->price_out( $product->get_sale_price() ),
-				'sku'                  => $this->cell_str( $product->get_sku() ),
+				'name'                 => $this->cell_str( $product->get_name( 'edit' ) ),
+				'description'          => $this->description_plain( $product->get_description( 'edit' ) ),
+				'regular'              => $this->export_price_from_product( $product, 'regular' ),
+				'sale'                 => $this->export_price_from_product( $product, 'sale' ),
+				'sku'                  => $this->export_product_sku( $product ),
 				'parent_sku'           => '',
 				'stock'                => $this->stock_out( $product ),
 				'category'             => $this->terms_csv( $product->get_id(), 'product_cat' ),
-				'image'                => $this->attachment_url( $product->get_image_id() ),
-				'gallery'              => $this->gallery_urls( $product->get_gallery_image_ids() ),
-				'weight'               => $this->dim_out( $product->get_weight() ),
-				'length'               => $this->dim_out( $product->get_length() ),
-				'width'                => $this->dim_out( $product->get_width() ),
-				'height'               => $this->dim_out( $product->get_height() ),
+				'image'                => $this->attachment_url( (int) $product->get_image_id( 'edit' ) ),
+				'gallery'              => $this->gallery_urls( $product->get_gallery_image_ids( 'edit' ) ),
+				'weight'               => $this->export_dim_from_product( $product, 'weight' ),
+				'length'               => $this->export_dim_from_product( $product, 'length' ),
+				'width'                => $this->export_dim_from_product( $product, 'width' ),
+				'height'               => $this->export_dim_from_product( $product, 'height' ),
 				'attributes_global'    => '',
 				'attributes_variation' => '',
 			)
@@ -544,20 +621,20 @@ final class Product_Export_Service {
 		return $this->format_row(
 			array(
 				'tipo'                 => 'variavel',
-				'name'                 => $this->cell_str( $product->get_name() ),
-				'description'          => $this->description_plain( $product->get_description() ),
-				'regular'              => $this->price_out( $product->get_regular_price() ),
-				'sale'                 => $this->price_out( $product->get_sale_price() ),
-				'sku'                  => $this->cell_str( $product->get_sku() ),
+				'name'                 => $this->cell_str( $product->get_name( 'edit' ) ),
+				'description'          => $this->description_plain( $product->get_description( 'edit' ) ),
+				'regular'              => $this->export_price_from_product( $product, 'regular' ),
+				'sale'                 => $this->export_price_from_product( $product, 'sale' ),
+				'sku'                  => $this->export_product_sku( $product ),
 				'parent_sku'           => '',
 				'stock'                => $this->stock_out( $product ),
 				'category'             => $this->terms_csv( $product->get_id(), 'product_cat' ),
-				'image'                => $this->attachment_url( $product->get_image_id() ),
-				'gallery'              => $this->gallery_urls( $product->get_gallery_image_ids() ),
-				'weight'               => $this->dim_out( $product->get_weight() ),
-				'length'               => $this->dim_out( $product->get_length() ),
-				'width'                => $this->dim_out( $product->get_width() ),
-				'height'               => $this->dim_out( $product->get_height() ),
+				'image'                => $this->attachment_url( (int) $product->get_image_id( 'edit' ) ),
+				'gallery'              => $this->gallery_urls( $product->get_gallery_image_ids( 'edit' ) ),
+				'weight'               => $this->export_dim_from_product( $product, 'weight' ),
+				'length'               => $this->export_dim_from_product( $product, 'length' ),
+				'width'                => $this->export_dim_from_product( $product, 'width' ),
+				'height'               => $this->export_dim_from_product( $product, 'height' ),
 				'attributes_global'    => $this->variable_attribute_labels( $product ),
 				'attributes_variation' => '',
 			)
@@ -572,7 +649,7 @@ final class Product_Export_Service {
 		$parent_sku  = '';
 		$attr_global = '';
 		if ( $parent instanceof WC_Product_Variable ) {
-			$parent_sku  = $this->cell_str( $parent->get_sku() );
+			$parent_sku  = $this->export_product_sku( $parent );
 			$attr_global = $this->variable_attribute_labels( $parent );
 		}
 
@@ -585,19 +662,19 @@ final class Product_Export_Service {
 			array(
 				'tipo'                 => 'variacao',
 				'name'                 => '',
-				'description'          => $this->description_plain( $variation->get_description() ),
-				'regular'              => $this->price_out( $variation->get_regular_price() ),
-				'sale'                 => $this->price_out( $variation->get_sale_price() ),
-				'sku'                  => $this->cell_str( $variation->get_sku() ),
+				'description'          => $this->description_plain( $variation->get_description( 'edit' ) ),
+				'regular'              => $this->export_price_from_product( $variation, 'regular' ),
+				'sale'                 => $this->export_price_from_product( $variation, 'sale' ),
+				'sku'                  => $this->export_product_sku( $variation ),
 				'parent_sku'           => $parent_sku,
 				'stock'                => $this->stock_out( $variation ),
 				'category'             => '',
-				'image'                => $this->attachment_url( $variation->get_image_id() ),
+				'image'                => $this->attachment_url( (int) $variation->get_image_id( 'edit' ) ),
 				'gallery'              => '',
-				'weight'               => $this->dim_out( $variation->get_weight() ),
-				'length'               => $this->dim_out( $variation->get_length() ),
-				'width'                => $this->dim_out( $variation->get_width() ),
-				'height'               => $this->dim_out( $variation->get_height() ),
+				'weight'               => $this->export_dim_from_product( $variation, 'weight' ),
+				'length'               => $this->export_dim_from_product( $variation, 'length' ),
+				'width'                => $this->export_dim_from_product( $variation, 'width' ),
+				'height'               => $this->export_dim_from_product( $variation, 'height' ),
 				'attributes_global'    => $attr_global,
 				'attributes_variation' => $pairs,
 			)
@@ -669,12 +746,43 @@ final class Product_Export_Service {
 			return '';
 		}
 		if ( is_string( $value ) ) {
-			return $value;
+			return str_replace( "\0", '', $value );
 		}
 		if ( is_scalar( $value ) ) {
-			return (string) $value;
+			return str_replace( "\0", '', (string) $value );
 		}
 		return '';
+	}
+
+	/**
+	 * SKU armazenado (contexto «edit» não passa por woocommerce_product_get_sku em modo view).
+	 * Fallback a _sku no post para plugins que alteram o objecto sem sincronizar o prop.
+	 *
+	 * @param WC_Product $product Produto ou variação.
+	 */
+	private function export_product_sku( WC_Product $product ): string {
+		$sku = $product->get_sku( 'edit' );
+		$sku = is_string( $sku ) ? $sku : '';
+		if ( '' === trim( $sku ) ) {
+			$meta = get_post_meta( $product->get_id(), '_sku', true );
+			$sku  = is_string( $meta ) ? $meta : ( is_scalar( $meta ) ? (string) $meta : '' );
+		}
+		return $this->cell_str( $sku );
+	}
+
+	/**
+	 * SKU quando só temos o ID (fallback sem WC_Product válido).
+	 */
+	private function export_sku_from_post_id( int $post_id ): string {
+		if ( $post_id <= 0 ) {
+			return '';
+		}
+		$product = wc_get_product( $post_id );
+		if ( $product instanceof WC_Product ) {
+			return $this->export_product_sku( $product );
+		}
+		$meta = get_post_meta( $post_id, '_sku', true );
+		return $this->cell_str( is_string( $meta ) ? $meta : ( is_scalar( $meta ) ? $meta : '' ) );
 	}
 
 	/**
@@ -689,25 +797,116 @@ final class Product_Export_Service {
 		}
 
 		$raw = str_ireplace( array( '<br>', '<br/>', '<br />' ), ' ', $raw );
-		$raw = preg_replace( '/<\s*\/\s*p\s*>/i', ' ', $raw );
-		$raw = preg_replace( '/<\s*li\s*>/i', ' • ', $raw );
+		$raw = $this->preg_replace_utf8( '/<\s*\/\s*p\s*>/i', ' ', $raw );
+		$raw = $this->preg_replace_utf8( '/<\s*li\s*>/i', ' • ', $raw );
 
 		$text = wp_strip_all_tags( $raw );
 		$text = html_entity_decode( $text, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-		$text = preg_replace( '/\s+/u', ' ', $text );
+		$text = $this->preg_replace_utf8( '/\s+/u', ' ', $text );
 
-		return trim( $text );
+		return trim( is_string( $text ) ? $text : '' );
+	}
+
+	/**
+	 * Evita falha da exportação quando preg_replace com /u devolve null (UTF-8 inválido).
+	 *
+	 * @param string $pattern Regex.
+	 * @param string $replace Replacement.
+	 * @param string $subject Subject.
+	 */
+	private function preg_replace_utf8( string $pattern, string $replace, string $subject ): string {
+		if ( '' === $subject ) {
+			return '';
+		}
+		$out = preg_replace( $pattern, $replace, $subject );
+		if ( is_string( $out ) ) {
+			return $out;
+		}
+		// UTF-8 inválido: /u pode falhar; tenta o mesmo padrão sem modificador Unicode.
+		if ( str_ends_with( $pattern, 'u' ) && strlen( $pattern ) > 2 ) {
+			$ascii = substr( $pattern, 0, -1 );
+			$out   = preg_replace( $ascii, $replace, $subject );
+			if ( is_string( $out ) ) {
+				return $out;
+			}
+		}
+		return $subject;
 	}
 
 	private function stock_out( WC_Product $product ): string {
-		if ( ! $product->managing_stock() ) {
+		if ( ! $this->export_product_manages_stock( $product ) ) {
 			return '';
 		}
-		$q = $product->get_stock_quantity();
+		$q = $product->get_stock_quantity( 'edit' );
+		if ( null === $q || '' === $q ) {
+			$meta = get_post_meta( $product->get_id(), '_stock', true );
+			if ( null !== $meta && '' !== $meta ) {
+				$q = $meta;
+			}
+		}
 		if ( null === $q || '' === $q ) {
 			return '0';
 		}
 		return (string) (int) $q;
+	}
+
+	/**
+	 * Igual a managing_stock(), mas usa meta «edit» (evita filtro woocommerce_product_get_manage_stock em view).
+	 */
+	private function export_product_manages_stock( WC_Product $product ): bool {
+		if ( 'yes' !== get_option( 'woocommerce_manage_stock' ) ) {
+			return false;
+		}
+		if ( $this->wc_export_string_to_bool( $product->get_manage_stock( 'edit' ) ) ) {
+			return true;
+		}
+		return $this->wc_export_string_to_bool( get_post_meta( $product->get_id(), '_manage_stock', true ) );
+	}
+
+	/**
+	 * @param mixed $value Valor tipo WooCommerce (yes/no, bool, …).
+	 */
+	private function wc_export_string_to_bool( $value ): bool {
+		if ( function_exists( 'wc_string_to_bool' ) ) {
+			return wc_string_to_bool( $value );
+		}
+		return true === $value || 'yes' === $value || '1' === $value || 1 === $value;
+	}
+
+	/**
+	 * Preço regular ou promocional tal como guardado (contexto edit + fallback _regular_price / _sale_price).
+	 *
+	 * @param 'regular'|'sale' $which
+	 */
+	private function export_price_from_product( WC_Product $product, string $which ): string {
+		$meta_key = 'sale' === $which ? '_sale_price' : '_regular_price';
+		$getter    = 'sale' === $which ? 'get_sale_price' : 'get_regular_price';
+		$raw       = $product->{$getter}( 'edit' );
+		$raw       = is_string( $raw ) ? $raw : ( is_scalar( $raw ) ? (string) $raw : '' );
+		if ( '' === trim( $raw ) ) {
+			$m = get_post_meta( $product->get_id(), $meta_key, true );
+			$raw = is_string( $m ) ? $m : ( is_scalar( $m ) ? (string) $m : '' );
+		}
+		return $this->price_out( $raw );
+	}
+
+	/**
+	 * Peso ou dimensão (contexto edit + fallback _weight, _length, …).
+	 *
+	 * @param 'weight'|'length'|'width'|'height' $axis
+	 */
+	private function export_dim_from_product( WC_Product $product, string $axis ): string {
+		$getter = 'get_' . $axis;
+		if ( ! is_callable( array( $product, $getter ) ) ) {
+			return '';
+		}
+		$raw = $product->{$getter}( 'edit' );
+		$raw = is_string( $raw ) ? $raw : ( is_scalar( $raw ) ? (string) $raw : '' );
+		if ( '' === trim( $raw ) ) {
+			$m = get_post_meta( $product->get_id(), '_' . $axis, true );
+			$raw = is_string( $m ) ? $m : ( is_scalar( $m ) ? (string) $m : '' );
+		}
+		return $this->dim_out( $raw );
 	}
 
 	private function attachment_url( int $attachment_id ): string {
